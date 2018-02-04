@@ -23,12 +23,12 @@ build:
 test_script:
 - dotnet test .\test --no-build
 after_test: 
-- dotnet pack .\src -c Debug -o .\artifacts\Debug --version-suffix %VERSIONSUFFIX%
-- dotnet pack .\src -c Release -o .\artifacts\Release
+- dotnet pack .\src -c Debug -o ..\artifacts\Debug --version-suffix %VERSIONSUFFIX%
+- dotnet pack .\src -c Release -o ..\artifacts\Release
 artifacts:
-- path: .\artifacts\Debug\**\*.nupkg
+- path: .\artifacts\Debug\*.nupkg
   name: DebugPkg
-- path: .\artifacts\Release\**\*.nupkg
+- path: .\artifacts\Release\*.nupkg
   name: ReleasePkg
 
 deploy:
