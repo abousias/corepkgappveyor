@@ -9,14 +9,13 @@ environment:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   myget: https://www.myget.org/F/abousias/api/v2/package
-  myget_api_key:
-    secure: fWvkfYfb4c48UgguAteQ+WWBI1x0EC7Tep86G8q7v95QuU67asjXMf8DlHNNkQwu
   debugPkg: DebugPkg
   releasePkg: ReleasePkg
 nuget:  
   disable_publish_on_pr: true
 init:
 - git config --global core.autocrlf true
+- ps: "$Env:VERSION = ('0.0.0', $Env:APPVEYOR_REPO_TAG_NAME)[$Env:APPVEYOR_REPO_TAG]"
 - ps: $Env:PRERELEASE_VERSION = "pre-" + $Env:APPVEYOR_BUILD_NUMBER.PadLeft(5, "0")
 before_build:
 - appveyor-retry dotnet restore -v Minimal
@@ -25,8 +24,8 @@ build:
 test_script:
 - dotnet test .\test --no-build
 after_test: 
-- dotnet pack .\src -c Debug --no-build --version-suffix %PRERELEASE_VERSION%
-- dotnet pack .\src -c Release
+- dotnet pack .\src -c Debug --no-build --include-symbols --version-suffix %PRERELEASE_VERSION%
+- dotnet pack .\src -c Release /p:Version=%VERSION%
 artifacts:
 - path: .\src\**\Debug\**\*.nupkg
   name: DebugPkg
@@ -36,16 +35,16 @@ artifacts:
 deploy:
 - provider: NuGet
   name: ci
-  server: $(myget)
-  api_key: $(myget_api_key)
+  server: https://www.myget.org/F/abousias/api/v2/package
   symbol_server: https://www.myget.org/F/abousias/symbols/api/v2/package
+  api_key: 
+    secure: fWvkfYfb4c48UgguAteQ+WWBI1x0EC7Tep86G8q7v95QuU67asjXMf8DlHNNkQwu
   artifact: $(debugPkg)
-  prerelease: false
   on:
     branch: master
 - provider: NuGet
-  server: $(myget)
-  api_key: $(myget_api_key)
+  api_key: 
+    secure: NedPsCSCR6WLsuNA4V+gc78laTwEKtFSgYOsSu+STquXAmuSetnO1XjJl2wO0EAZ
   artifact: $(releasePkg)
   on:
     branch: master
