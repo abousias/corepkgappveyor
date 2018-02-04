@@ -1,0 +1,46 @@
+version: '{build}'
+image: Visual Studio 2017
+branches:
+  only:
+  - master
+pull_requests:  
+  do_not_increment_build_number: true
+environment:  
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  server: https://www.myget.org/F/abousias/api/v2/package
+  api_key:
+    secure: fWvkfYfb4c48UgguAteQ+WWBI1x0EC7Tep86G8q7v95QuU67asjXMf8DlHNNkQwu
+nuget:  
+  disable_publish_on_pr: true
+init:
+- git config --global core.autocrlf true
+- ps: "$Env:VERSION = ('',$Env:APPVEYOR_REPO_TAG_NAME)[$Env:APPVEYOR_REPO_TAG]"
+- ps: $Env:VERSIONSUFFIX = "pre-" + $Env:APPVEYOR_BUILD_NUMBER.PadLeft(5, "0")
+before_build:
+- appveyor-retry dotnet restore -v Minimal
+build:
+  verbosity: minimal
+test_script:
+- dotnet test .\test --no-build
+after_test: 
+- dotnet pack .\src -c Debug -o .\artifacts\Debug --version-suffix %VERSIONSUFFIX%
+- dotnet pack .\src -c Release -o .\artifacts\Release /p:Version=%VERSION%
+artifacts:
+- path: .\artifacts\Debug\**\*.nupkg
+  name: DebugPkg
+- path: .\artifacts\Release\**\*.nupkg
+  name: ReleasePkg
+
+deploy:
+- provider: NuGet
+  symbol_server: https://www.myget.org/F/abousias/symbols/api/v2/package
+  artifact: DebugPkg
+  prerelease: false
+  on:
+    branch: master
+- provider: NuGet
+  artifact: ReleasePkg
+  on:
+    branch: master
+    appveyor_repo_tag: true
