@@ -15,7 +15,6 @@ nuget:
   disable_publish_on_pr: true
 init:
 - git config --global core.autocrlf true
-- ps: "$Env:VERSION = ('',$Env:APPVEYOR_REPO_TAG_NAME)[$Env:APPVEYOR_REPO_TAG]"
 - ps: $Env:VERSIONSUFFIX = "pre-" + $Env:APPVEYOR_BUILD_NUMBER.PadLeft(5, "0")
 before_build:
 - appveyor-retry dotnet restore -v Minimal
@@ -25,7 +24,7 @@ test_script:
 - dotnet test .\test --no-build
 after_test: 
 - dotnet pack .\src -c Debug -o .\artifacts\Debug --version-suffix %VERSIONSUFFIX%
-- dotnet pack .\src -c Release -o .\artifacts\Release /p:Version=%VERSION%
+- dotnet pack .\src -c Release -o .\artifacts\Release
 artifacts:
 - path: .\artifacts\Debug\**\*.nupkg
   name: DebugPkg
